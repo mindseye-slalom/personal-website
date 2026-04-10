@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const weatherTemp = document.querySelector('.weather-temp');
     const weatherCondition = document.querySelector('.weather-condition');
 
-    async function fetchWeather(latitude, longitude) {
+    async function fetchWeather(latitude, longitude, locationOverride = null) {
         try {
             // Show loading state
             weatherLoading.style.display = 'flex';
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Fetch weather data from Open-Meteo API
             const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=fahrenheit`
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m&temperature_unit=fahrenheit`
             );
 
             if (!response.ok) {
@@ -113,51 +113,61 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
             const current = data.current;
 
-            // Map WMO weather codes to descriptions
-            const weatherDescriptions = {
-                0: 'Clear',
-                1: 'Mostly Clear',
-                2: 'Partly Cloudy',
-                3: 'Overcast',
-                45: 'Foggy',
-                48: 'Foggy',
-                51: 'Light Drizzle',
-                53: 'Moderate Drizzle',
-                55: 'Heavy Drizzle',
-                61: 'Light Rain',
-                63: 'Moderate Rain',
-                65: 'Heavy Rain',
-                71: 'Light Snow',
-                73: 'Moderate Snow',
-                75: 'Heavy Snow',
-                80: 'Light Showers',
-                81: 'Moderate Showers',
-                82: 'Heavy Showers',
-                85: 'Light Snow Showers',
-                86: 'Heavy Snow Showers',
-                95: 'Thunderstorm',
-                96: 'Thunderstorm with Hail',
-                99: 'Thunderstorm'
+            // Map WMO weather codes to descriptions and icons
+            const weatherMap = {
+                0: { description: 'Clear', icon: '☀️' },
+                1: { description: 'Mostly Clear', icon: '🌤️' },
+                2: { description: 'Partly Cloudy', icon: '⛅' },
+                3: { description: 'Overcast', icon: '☁️' },
+                45: { description: 'Foggy', icon: '🌫️' },
+                48: { description: 'Foggy', icon: '🌫️' },
+                51: { description: 'Light Drizzle', icon: '🌧️' },
+                53: { description: 'Moderate Drizzle', icon: '🌧️' },
+                55: { description: 'Heavy Drizzle', icon: '🌧️' },
+                61: { description: 'Light Rain', icon: '🌧️' },
+                63: { description: 'Moderate Rain', icon: '🌧️' },
+                65: { description: 'Heavy Rain', icon: '⛈️' },
+                71: { description: 'Light Snow', icon: '❄️' },
+                73: { description: 'Moderate Snow', icon: '❄️' },
+                75: { description: 'Heavy Snow', icon: '❄️' },
+                80: { description: 'Light Showers', icon: '🌦️' },
+                81: { description: 'Moderate Showers', icon: '🌧️' },
+                82: { description: 'Heavy Showers', icon: '⛈️' },
+                85: { description: 'Light Snow Showers', icon: '🌨️' },
+                86: { description: 'Heavy Snow Showers', icon: '🌨️' },
+                95: { description: 'Thunderstorm', icon: '⛈️' },
+                96: { description: 'Thunderstorm with Hail', icon: '⛈️' },
+                99: { description: 'Thunderstorm', icon: '⛈️' }
             };
 
-            const condition = weatherDescriptions[current.weather_code] || 'Unknown';
+            const weatherInfo = weatherMap[current.weather_code] || { description: 'Unknown', icon: '🌡️' };
+            const condition = weatherInfo.description;
+            const icon = weatherInfo.icon;
             const temp = Math.round(current.temperature_2m);
+            const feelsLike = Math.round(current.apparent_temperature);
+            const humidity = Math.round(current.relative_humidity_2m);
 
-            // Fetch location name using reverse geocoding (simple approach)
-            const geoResponse = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-            );
+            // Fetch location name using reverse geocoding or use override
+            let locationName = locationOverride;
+            if (!locationName) {
+                const geoResponse = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+                );
 
-            if (geoResponse.ok) {
-                const geoData = await geoResponse.json();
-                const locationName = geoData.address?.city || geoData.address?.town || geoData.address?.county || 'Your Location';
-                weatherLocation.textContent = locationName;
-            } else {
-                weatherLocation.textContent = 'Your Location';
+                if (geoResponse.ok) {
+                    const geoData = await geoResponse.json();
+                    locationName = geoData.address?.city || geoData.address?.town || geoData.address?.county || 'Your Location';
+                } else {
+                    locationName = 'Your Location';
+                }
             }
+            weatherLocation.textContent = locationName;
 
             // Update display
+            document.querySelector('.weather-icon').textContent = icon;
             weatherTemp.textContent = `${temp}°F`;
+            document.querySelector('.weather-feels-like').textContent = `Feels like ${feelsLike}°F`;
+            document.querySelector('.weather-humidity').textContent = `${humidity}% humidity`;
             weatherCondition.textContent = condition;
             weatherLoading.style.display = 'none';
             weatherData.style.display = 'flex';
@@ -171,26 +181,75 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function getWeather() {
+        console.log('Weather widget: Initializing...');
+
         if (!navigator.geolocation) {
-            weatherError.style.display = 'flex';
+            console.error('Geolocation not supported, using IP fallback');
+            getWeatherByIP();
             return;
         }
 
+        console.log('Weather widget: Requesting geolocation...');
+
+        // Add a timeout - if geolocation takes more than 5 seconds, use IP fallback
+        const geoTimeout = setTimeout(() => {
+            console.error('Geolocation timeout - using IP-based fallback');
+            getWeatherByIP();
+        }, 5000);
+
         navigator.geolocation.getCurrentPosition(
             (position) => {
+                clearTimeout(geoTimeout);
+                console.log('Weather widget: Geolocation granted', position.coords);
                 const { latitude, longitude } = position.coords;
                 fetchWeather(latitude, longitude);
             },
             (error) => {
-                // User denied location or error occurred
-                console.log('Geolocation error:', error.message);
-                weatherLoading.style.display = 'none';
-                weatherData.style.display = 'none';
-                weatherError.style.display = 'flex';
-            }
+                clearTimeout(geoTimeout);
+                console.error('Geolocation error code:', error.code);
+                console.error('Geolocation error message:', error.message);
+                // Fallback to IP-based geolocation on any error
+                getWeatherByIP();
+            },
+            { timeout: 4000, enableHighAccuracy: false } // 4 second timeout, don't need high accuracy
         );
     }
 
+    async function getWeatherByIP() {
+        console.log('Weather widget: Using IP-based geolocation fallback...');
+        try {
+            // Try ip-api.com first
+            const response = await fetch('https://ip-api.com/json/?fields=lat,lon,city');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Weather widget: IP geolocation result from ip-api:', data);
+                if (data.lat && data.lon && data.city) {
+                    fetchWeather(data.lat, data.lon, data.city);
+                    return;
+                }
+            }
+
+            // Fallback to ipify.org for more accurate geo data
+            const geoResponse = await fetch('https://geo.ipify.org/api/v2/country,city?apiKey=at_i8gW0H4BZm7pqHdJmN8jJXjN4GxDX');
+            if (geoResponse.ok) {
+                const geoData = await geoResponse.json();
+                console.log('Weather widget: ipify geolocation result:', geoData);
+                if (geoData.location && geoData.city) {
+                    fetchWeather(geoData.location.lat, geoData.location.lng, geoData.city);
+                    return;
+                }
+            }
+
+            throw new Error('IP geolocation services unavailable');
+        } catch (error) {
+            console.error('IP geolocation error:', error);
+            // Ultimate fallback: use NYC coordinates
+            console.log('Weather widget: Using fallback location (New York)');
+            fetchWeather(40.7128, -74.0060, 'New York');
+        }
+    }
+
     // Initialize weather widget
+    weatherLoading.style.display = 'flex';
     getWeather();
 });
