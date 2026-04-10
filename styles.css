@@ -44,7 +44,7 @@ body {
 h1,
 h2,
 h3 {
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.4;
     font-family: "Boldonse", Arial, sans-serif;
 }
@@ -466,7 +466,7 @@ section h2::after {
 
 /* ===== Footer ===== */
 footer {
-    background: var(--purple);
+    background: var(--bg-light);
     color: var(--white);
     text-align: center;
     padding: var(--spacing-lg) var(--spacing-md);
@@ -475,9 +475,9 @@ footer {
 }
 
 footer p {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-dark);
     margin: 0;
-    font-size: 0.95rem;
+
 }
 
 /* ===== Utility Classes ===== */
