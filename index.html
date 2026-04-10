@@ -197,7 +197,25 @@
 
     <!-- ===== Footer ===== -->
     <footer>
-        <p>&copy; 2026 Rizwan</p>
+        <div class="footer-content">
+            <p class="footer-credit">&copy; 2026 Rizwan</p>
+            <div class="weather-widget">
+                <div class="weather-loading" style="display: none;">
+                    <span class="weather-spinner"></span>
+                    <span class="weather-text">Loading weather...</span>
+                </div>
+                <div class="weather-data" style="display: none;">
+                    <div class="weather-info">
+                        <span class="weather-location"></span>
+                        <span class="weather-temp"></span>
+                        <span class="weather-condition"></span>
+                    </div>
+                </div>
+                <div class="weather-error" style="display: none;">
+                    <span class="weather-text">Unable to load weather</span>
+                </div>
+            </div>
+        </div>
     </footer>
 </body>
 

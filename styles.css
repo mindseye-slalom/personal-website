@@ -467,17 +467,88 @@ section h2::after {
 /* ===== Footer ===== */
 footer {
     background: var(--bg-light);
-    color: var(--white);
-    text-align: center;
+    color: var(--text-dark);
     padding: var(--spacing-lg) var(--spacing-md);
     margin-top: var(--spacing-xl);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--border-light);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
 }
 
 footer p {
     color: var(--text-dark);
     margin: 0;
+}
 
+.footer-credit {
+    font-size: 0.95rem;
+}
+
+/* ===== Weather Widget ===== */
+.weather-widget {
+    font-size: 0.9rem;
+    min-height: 24px;
+}
+
+.weather-loading,
+.weather-data,
+.weather-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.weather-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-light);
+    border-top-color: var(--light-blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.weather-text {
+    color: var(--text-muted);
+}
+
+.weather-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-dark);
+}
+
+.weather-location {
+    font-weight: 500;
+}
+
+.weather-temp {
+    color: var(--light-blue);
+    font-weight: 600;
+}
+
+.weather-condition {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.weather-error {
+    color: var(--text-muted);
 }
 
 /* ===== Utility Classes ===== */
@@ -538,6 +609,12 @@ footer p {
         font-size: 50px;
         border: 3px solid var(--white);
     }
+
+    .footer-content {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        text-align: center;
+    }
 }
 
 @media (max-width: 480px) {
@@ -570,6 +647,22 @@ footer p {
     nav a {
         padding: var(--spacing-xs) var(--spacing-xs);
         font-size: 0.85rem;
+    }
+
+    .weather-info {
+        gap: var(--spacing-xs);
+    }
+
+    .weather-text {
+        font-size: 0.8rem;
+    }
+
+    .weather-temp {
+        font-size: 0.9rem;
+    }
+
+    .weather-condition {
+        display: none;
     }
 }
 
