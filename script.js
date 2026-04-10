@@ -243,9 +243,9 @@ document.addEventListener('DOMContentLoaded', function () {
             throw new Error('IP geolocation services unavailable');
         } catch (error) {
             console.error('IP geolocation error:', error);
-            // Ultimate fallback: use NYC coordinates
-            console.log('Weather widget: Using fallback location (New York)');
-            fetchWeather(40.7128, -74.0060, 'New York');
+            // Ultimate fallback: use Roseville, CA coordinates
+            console.log('Weather widget: Using fallback location (Roseville, CA)');
+            fetchWeather(38.7521, -121.2723, 'Roseville');
         }
     }
 
